@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Pavimentos Valparaíso 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Warm Construction Harmony (Fondos crema, acentos ámbar y grises técnicos) -->
+    <style>
+        :root {
+            --bg-main: #fdfbf7;
+            --card-bg: #ffffff;
+            --accent: #d97706;
+            --text-dark: #332d29;
+            --secondary: #6b7280;
+        }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .custom-shadow { box-shadow: 0 4px 20px -2px rgba(217, 119, 6, 0.1); }
+    </style>
+</head>
+<body class="p-0 m-0">
+
+    <!-- Application Structure Plan: 
+         La aplicación se organiza en una arquitectura de "Dashboard de Control" con navegación por pestañas funcionales. 
+         Esta estructura fue elegida para separar la complejidad del reporte (Cubicación, Costos, Mano de Obra y Logística) 
+         en módulos digeribles que permitan al usuario enfocarse en una tarea a la vez (ej: decidir el patrón de corte o comparar presupuestos). 
+         La interactividad central permite cambiar entre instalación "Ortogonal" y "Diagonal", actualizando dinámicamente las cantidades de material. -->
+
+    <nav class="bg-white border-b border-amber-100 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 bg-amber-600 rounded flex items-center justify-center text-white font-bold">V</div>
+                <span class="text-xl font-bold tracking-tight text-amber-900">Maestro Valparaíso <span class="text-amber-500">2026</span></span>
+            </div>
+            <div class="flex space-x-1 mt-2 sm:mt-0 overflow-x-auto">
+                <button onclick="showTab('resumen')" class="tab-btn px-4 py-2 rounded-md text-sm font-medium transition-colors hover:bg-amber-50 active-tab bg-amber-100 text-amber-900" id="btn-resumen">Resumen</button>
+                <button onclick="showTab('calculos')" class="tab-btn px-4 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-amber-50" id="btn-calculos">Cubicación</button>
+                <button onclick="showTab('presupuesto')" class="tab-btn px-4 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-amber-50" id="btn-presupuesto">Comparativa</button>
+                <button onclick="showTab('logistica')" class="tab-btn px-4 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-amber-50" id="btn-logistica">Logística</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        
+        <!-- SECCIÓN: RESUMEN -->
+        <section id="tab-resumen" class="tab-content active space-y-8">
+            <div class="bg-white p-6 rounded-xl border border-amber-100 custom-shadow">
+                <h2 class="text-3xl font-bold text-amber-900 mb-4">Planificación Integral de Revestimientos</h2>
+                <p class="text-lg text-gray-700 leading-relaxed max-w-4xl">
+                    Este panel interactivo sintetiza los hallazgos del reporte técnico para la instalación de 20 m² de porcelanato en Valparaíso. En un contexto económico volátil proyectado para 2026, la precisión en la compra y la logística es crítica. Aquí podrá explorar desde el cálculo exacto de cajas hasta el impacto de los cerros en el costo del flete.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-amber-600 text-white p-6 rounded-xl shadow-lg">
+                    <p class="text-amber-100 text-sm font-bold uppercase tracking-wider">Superficie Neta</p>
+                    <p class="text-4xl font-black">20.0 m²</p>
+                    <p class="mt-2 text-xs opacity-80">Área base de cálculo para el proyecto.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-amber-100 shadow-sm">
+                    <p class="text-gray-500 text-sm font-bold uppercase tracking-wider">Peso Estimado</p>
+                    <p class="text-4xl font-black text-amber-900">~560 kg</p>
+                    <p class="mt-2 text-xs text-gray-400 italic">Incluye porcelanato, adhesivo y fragüe.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-amber-100 shadow-sm">
+                    <p class="text-gray-500 text-sm font-bold uppercase tracking-wider">Ubicación Crítica</p>
+                    <p class="text-4xl font-black text-amber-900 uppercase">Cerros</p>
+                    <p class="mt-2 text-xs text-gray-400 italic">Factor de recargo logístico estimado: +15-30%.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div>
+                    <h3 class="text-xl font-bold mb-4 text-amber-900">Distribución de Peso de Insumos</h3>
+                    <p class="text-sm text-gray-600 mb-6">Visualización de la carga logística. El porcelanato constituye la mayor parte de la masa a transportar, seguido por los sacos de adhesivo cementicio.</p>
+                    <div class="chart-container">
+                        <canvas id="weightChart"></canvas>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="bg-amber-50 p-4 rounded-lg border-l-4 border-amber-500">
+                        <h4 class="font-bold text-amber-900">¿Por qué 2026?</h4>
+                        <p class="text-sm text-amber-800">El presupuesto contempla la inflación sectorial y las fluctuaciones del tipo de cambio que encarecen materiales importados.</p>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+                        <h4 class="font-bold text-blue-900">Dato de Maestro</h4>
+                        <p class="text-sm text-blue-800">Se recomienda el uso obligatorio de <strong>doble encolado</strong> para piezas de 60x60 cm debido a su baja porosidad.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: CUBICACIÓN -->
+        <section id="tab-calculos" class="tab-content space-y-8">
+            <div class="bg-white p-6 rounded-xl border border-amber-100 shadow-sm">
+                <h2 class="text-2xl font-bold text-amber-900 mb-2">Cubicación Técnica Dinámica</h2>
+                <p class="text-gray-600 mb-6">El patrón de instalación define el porcentaje de merma. Cambie el patrón para ver cómo impacta en la compra final de materiales.</p>
+                
+                <div class="flex flex-wrap gap-4 mb-8">
+                    <button onclick="setPattern('ortogonal')" id="btn-orto" class="flex-1 min-w-[200px] p-4 border-2 border-amber-600 bg-amber-50 rounded-xl text-left transition-all">
+                        <span class="block font-bold text-amber-900">Ortogonal Estándar</span>
+                        <span class="text-xs text-amber-700">Merma recomendada: 10%</span>
+                    </button>
+                    <button onclick="setPattern('diagonal')" id="btn-diag" class="flex-1 min-w-[200px] p-4 border-2 border-gray-100 bg-white rounded-xl text-left transition-all">
+                        <span class="block font-bold text-gray-500">Diagonal (45°)</span>
+                        <span class="text-xs text-gray-400">Merma recomendada: 15%</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="p-6 bg-gray-50 rounded-xl text-center">
+                        <span class="text-sm text-gray-500 uppercase font-bold">Porcelanato</span>
+                        <p id="calc-boxes" class="text-4xl font-black text-amber-600 my-2">16</p>
+                        <span class="text-gray-600">Cajas (23.04 m²)</span>
+                    </div>
+                    <div class="p-6 bg-gray-50 rounded-xl text-center">
+                        <span class="text-sm text-gray-500 uppercase font-bold">Adhesivo (Sacos 25kg)</span>
+                        <p class="text-4xl font-black text-amber-600 my-2">5</p>
+                        <span class="text-gray-600">Total: 125 kg</span>
+                    </div>
+                    <div class="p-6 bg-gray-50 rounded-xl text-center">
+                        <span class="text-sm text-gray-500 uppercase font-bold">Fragüe (kg)</span>
+                        <p class="text-4xl font-black text-amber-600 my-2">6</p>
+                        <span class="text-gray-600">Saco 5kg + 1kg</span>
+                    </div>
+                </div>
+                
+                <div class="mt-8 overflow-hidden rounded-xl border border-gray-200">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-4 font-bold text-gray-700">Material</th>
+                                <th class="p-4 font-bold text-gray-700">Consumo Unitario</th>
+                                <th class="p-4 font-bold text-gray-700">Cálculo Total</th>
+                                <th class="p-4 font-bold text-gray-700">Factor Seguridad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-t">
+                                <td class="p-4">Porcelanato 60x60</td>
+                                <td class="p-4">1.44 m²/caja</td>
+                                <td class="p-4" id="row-boxes">16 Cajas</td>
+                                <td class="p-4"><span id="row-safety" class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">15.2%</span></td>
+                            </tr>
+                            <tr class="border-t">
+                                <td class="p-4">Adhesivo Bekron DA</td>
+                                <td class="p-4">5.5 kg/m²</td>
+                                <td class="p-4">110 kg netos</td>
+                                <td class="p-4"><span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">+15 kg extra</span></td>
+                            </tr>
+                            <tr class="border-t">
+                                <td class="p-4">Fragüe Junta 2mm</td>
+                                <td class="p-4">0.3 kg/m²</td>
+                                <td class="p-4">6 kg exactos</td>
+                                <td class="p-4"><span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-xs font-bold">Stock Justo</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: PRESUPUESTO -->
+        <section id="tab-presupuesto" class="tab-content space-y-8">
+            <div class="bg-white p-6 rounded-xl border border-amber-100 shadow-sm">
+                <h2 class="text-2xl font-bold text-amber-900 mb-2">Escenarios Económicos 2026</h2>
+                <p class="text-gray-600 mb-8">Comparativa de inversión total de materiales según gama de calidad. No incluye mano de obra ni fletes.</p>
+                
+                <div class="chart-container mb-12">
+                    <canvas id="budgetChart"></canvas>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Económico -->
+                    <div class="border border-gray-200 rounded-xl overflow-hidden flex flex-col">
+                        <div class="bg-gray-100 p-4 text-center font-bold text-gray-600">ECONÓMICO</div>
+                        <div class="p-6 flex-grow text-center">
+                            <p class="text-3xl font-black text-gray-800">$215.760</p>
+                            <p class="text-sm text-gray-500 mt-1">CLP Total Insumos</p>
+                            <ul class="text-left mt-6 space-y-2 text-sm text-gray-600">
+                                <li>• Porcelanato Sal Soluble</li>
+                                <li>• Bekron DA Estándar</li>
+                                <li>• Fragüe s/ aditivos</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Estándar -->
+                    <div class="border-2 border-amber-500 rounded-xl overflow-hidden flex flex-col relative scale-105 shadow-xl z-10 bg-white">
+                        <div class="bg-amber-500 p-4 text-center font-bold text-white uppercase">Recomendado</div>
+                        <div class="p-6 flex-grow text-center">
+                            <p class="text-3xl font-black text-amber-900">$299.780</p>
+                            <p class="text-sm text-gray-500 mt-1">CLP Total Insumos</p>
+                            <ul class="text-left mt-6 space-y-2 text-sm text-gray-600">
+                                <li>• Porcelanato Cordillera</li>
+                                <li>• Adhesivo Flexible</li>
+                                <li>• Fragüe Premium Anti-hongos</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Premium -->
+                    <div class="border border-amber-900 rounded-xl overflow-hidden flex flex-col">
+                        <div class="bg-amber-900 p-4 text-center font-bold text-white uppercase">Premium</div>
+                        <div class="p-6 flex-grow text-center">
+                            <p class="text-3xl font-black text-amber-900">$616.930</p>
+                            <p class="text-sm text-gray-500 mt-1">CLP Total Insumos</p>
+                            <ul class="text-left mt-6 space-y-2 text-sm text-gray-600">
+                                <li>• Klipen Travertino</li>
+                                <li>• Bekron Superflex</li>
+                                <li>• Fragüe Flex Alta Resistencia</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl border border-amber-100 shadow-sm">
+                <h3 class="text-xl font-bold text-amber-900 mb-4 text-center">Mano de Obra Estimada (m²)</h3>
+                <div class="chart-container">
+                    <canvas id="laborChart"></canvas>
+                </div>
+                <p class="mt-4 text-xs text-center text-gray-400 italic">* Tarifas base 2026 para la Región de Valparaíso.</p>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: LOGÍSTICA -->
+        <section id="tab-logistica" class="tab-content space-y-8">
+            <div class="bg-white p-6 rounded-xl border border-amber-100 shadow-sm">
+                <h2 class="text-2xl font-bold text-amber-900 mb-2">Desafíos Logísticos en Valparaíso</h2>
+                <p class="text-gray-600 mb-6">La topografía de la ciudad añade una capa de complejidad al transporte de materiales pesados (~560 kg).</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-6">
+                        <div class="bg-red-50 p-5 rounded-xl border-l-4 border-red-500">
+                            <h4 class="font-bold text-red-900 mb-1">El "Factor Cerro"</h4>
+                            <p class="text-sm text-red-800 leading-snug">
+                                Las entregas en zonas altas o peatonalizadas pueden subir el costo de mano de obra un <strong>15-30%</strong>. El retail solo entrega "a pie de camión", lo que requiere acarreo manual adicional.
+                            </p>
+                        </div>
+                        <div class="bg-gray-50 p-5 rounded-xl">
+                            <h4 class="font-bold text-gray-800 mb-2">Comparativa de Fletes</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center text-sm">
+                                    <span>Retail Programado</span>
+                                    <span class="font-bold">$15.000 - $35.000</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span>Flete Independiente (1 Ton)</span>
+                                    <span class="font-bold">$25.000 - $45.000</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm text-amber-700">
+                                    <span>Servicio c/ Acarreo (Cerros)</span>
+                                    <span class="font-bold">$115.000 - $160.000</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-amber-900 text-white p-8 rounded-2xl flex flex-col justify-center relative overflow-hidden">
+                        <div class="absolute -right-10 -bottom-10 opacity-10">
+                            <span class="text-[150px] font-black">560</span>
+                        </div>
+                        <h4 class="text-xl font-bold mb-4">Recomendación Estratégica</h4>
+                        <p class="text-amber-100 mb-6">Contratar un <strong>flete local independiente</strong> suele ser más flexible en los cerros, permitiendo negociar el acarreo manual hasta el interior de la vivienda.</p>
+                        <div class="text-xs text-amber-200 uppercase tracking-widest font-bold">Logística Crítica 2026</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-amber-900 text-white py-8 mt-12">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p class="text-sm opacity-60">Basado en el Reporte Técnico de Cubicación y Presupuesto - Valparaíso 2026</p>
+            <p class="text-xs mt-2 opacity-40">Proyecciones sujetas a variaciones de mercado regional.</p>
+        </div>
+    </footer>
+
+    <!-- Visualización & Content Choices: 
+         - Gráfico de Peso: Donut (Chart.js) para mostrar proporciones de carga.
+         - Gráfico de Presupuesto: Bar (Chart.js) para comparar los 3 escenarios de inversión.
+         - Gráfico de Mano de Obra: Horizontal Bar para visualizar rangos de tarifas.
+         - Interactividad: El selector de patrón actualiza la cubicación de forma instantánea.
+         - Confirmación: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <script>
+        let weightChart, budgetChart, laborChart;
+
+        function initCharts() {
+            const ctxWeight = document.getElementById('weightChart').getContext('2d');
+            weightChart = new Chart(ctxWeight, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Porcelanato', 'Adhesivo', 'Fragüe/Htas'],
+                    datasets: [{
+                        data: [420, 125, 15],
+                        backgroundColor: ['#d97706', '#92400e', '#fde68a'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            const ctxBudget = document.getElementById('budgetChart').getContext('2d');
+            budgetChart = new Chart(ctxBudget, {
+                type: 'bar',
+                data: {
+                    labels: ['Económico', 'Estándar', 'Premium'],
+                    datasets: [{
+                        label: 'Inversión en Materiales (CLP)',
+                        data: [215760, 299780, 616930],
+                        backgroundColor: ['#cbd5e1', '#f59e0b', '#451a03'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            ticks: { callback: value => '$' + value.toLocaleString() }
+                        }
+                    }
+                }
+            });
+
+            const ctxLabor = document.getElementById('laborChart').getContext('2d');
+            laborChart = new Chart(ctxLabor, {
+                type: 'bar',
+                indexAxis: 'y',
+                data: {
+                    labels: ['Maestro Indep.', 'Empresa Pyme', 'Constructora'],
+                    datasets: [
+                        {
+                            label: 'Tarifa Mínima ($/m²)',
+                            data: [8000, 12000, 22000],
+                            backgroundColor: '#fbbf24'
+                        },
+                        {
+                            label: 'Tarifa Máxima ($/m²)',
+                            data: [12000, 18000, 35000],
+                            backgroundColor: '#d97706'
+                        }
+                    ]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-amber-100', 'text-amber-900', 'active-tab');
+                btn.classList.add('text-gray-600');
+            });
+
+            document.getElementById('tab-' + tabId).classList.add('active');
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.add('bg-amber-100', 'text-amber-900', 'active-tab');
+            activeBtn.classList.remove('text-gray-600');
+        }
+
+        function setPattern(type) {
+            const btnOrto = document.getElementById('btn-orto');
+            const btnDiag = document.getElementById('btn-diag');
+            const boxCount = document.getElementById('calc-boxes');
+            const rowBoxes = document.getElementById('row-boxes');
+            const rowSafety = document.getElementById('row-safety');
+
+            if (type === 'ortogonal') {
+                btnOrto.className = "flex-1 min-w-[200px] p-4 border-2 border-amber-600 bg-amber-50 rounded-xl text-left transition-all";
+                btnDiag.className = "flex-1 min-w-[200px] p-4 border-2 border-gray-100 bg-white rounded-xl text-left transition-all";
+                boxCount.innerText = "16";
+                rowBoxes.innerText = "16 Cajas (23.04 m²)";
+                rowSafety.innerText = "15.2%";
+                rowSafety.className = "bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold";
+            } else {
+                btnDiag.className = "flex-1 min-w-[200px] p-4 border-2 border-amber-600 bg-amber-50 rounded-xl text-left transition-all";
+                btnOrto.className = "flex-1 min-w-[200px] p-4 border-2 border-gray-100 bg-white rounded-xl text-left transition-all";
+                boxCount.innerText = "16"; // Nota del reporte: 16 cajas alcanza justo para diagonal.
+                rowBoxes.innerText = "16 Cajas (Límite)";
+                rowSafety.innerText = "0.17%";
+                rowSafety.className = "bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold";
+            }
+        }
+
+        window.onload = initCharts;
+    </script>
+</body>
+</html>
